@@ -1,11 +1,12 @@
 name: Monthly Slack Reminders
 
+# ❶ 첫째‧셋째 주 월요일 13:00 (KST = UTC+9)
+# GitHub Actions 의 cron 은 “UTC 기준”이니까 13-9 = 04시로 환산
 on:
-  # schedule:
-    # - cron: '0 4 1-7 * 1'     # 첫째 주 월요일 오후 1시 (KST)
-    # - cron: '0 4 15-21 * 1'   # 셋째 주 월요일 오후 1시 (KST)
-  workflow_dispatch:  # ✅ 수동 실행 허용
-
+  schedule:
+    - cron: '0 4 1-7 * 1'     # 첫째 주 월요일 04:00 UTC
+    - cron: '0 4 15-21 * 1'   # 셋째 주 월요일 04:00 UTC
+  workflow_dispatch:          # 수동 실행도 허용
 
 jobs:
   post-to-slack:
@@ -14,24 +15,31 @@ jobs:
       - name: Send reminder to Slack
         env:
           SLACK_TOKEN: ${{ secrets.SLACK_TOKEN }}
+          TZ: Asia/Seoul        # date 명령을 KST 기준으로
         run: |
+          # ▶️ ❷ 날짜가 15일 이상이면 다른 이미지를 보내도록 분기
           IMAGE_URL="https://github.com/kasurashan/img-test/blob/main/ai-trend-1.png?raw=true"
-          NOW=$(date +%d)
-          if [ $NOW -ge 15 ]; then
+          TODAY=$(date +%d)     # KST 기준 일(01~31)
+          if [ "$TODAY" -ge 15 ]; then
             IMAGE_URL="https://github.com/kasurashan/img-test/blob/main/ai-trend-2.png?raw=true"
           fi
 
-          curl -X POST -H "Authorization: Bearer $SLACK_TOKEN" \
-            -H 'Content-type: application/json' \
-            --data "{
-              \"channel\": \"#general\",
-              \"text\": \"Let’s try to have everyone in this channel post at least once a month!\",
-              \"attachments\": [
-                {
-                  \"fallback\": \"슬랙 리마인더 이미지\",
-                  \"image_url\": \"${IMAGE_URL}\",
-                  \"text\": \"AI is changing fast, and it’s hard to keep up alone. If we all share more, we can spot trends faster and find areas we’re good at together.\"
-                }
-              ]
-            }" \
-            https://slack.com/api/chat.postMessage
+          # ▶️ ❸ Slack 메시지 전송
+          jq -n --arg url "$IMAGE_URL" '
+          {
+            channel:"#general",
+            text:"Let’s try to have everyone in this channel post at least once a month!",
+            attachments:[
+              {
+                fallback:"슬랙 리마인더 이미지",
+                image_url:$url,
+                text:"AI is changing fast, and it’s hard to keep up alone. If we all share more, we can spot trends faster and find areas we’re good at together."
+              }
+            ]
+          }' > payload.json
+
+          curl -s -X POST \
+            -H "Authorization: Bearer $SLACK_TOKEN" \
+            -H "Content-Type: application/json; charset=utf-8" \
+            --data @payload.json \
+            https://slack.com/api/chat.postMessage | jq .
