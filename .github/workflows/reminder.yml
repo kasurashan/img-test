@@ -18,10 +18,10 @@ jobs:
           TZ: Asia/Seoul        # date 명령을 KST 기준으로
         run: |
           # ▶️ ❷ 날짜가 15일 이상이면 다른 이미지를 보내도록 분기
-          IMAGE_URL="https://github.com/kasurashan/img-test/blob/main/ai-trend-1.png?raw=true"
+          IMAGE_URL="https://github.com/kasurashan/slack-reminder/blob/main/ai-trend-1.png?raw=true"
           TODAY=$(date +%d)     # KST 기준 일(01~31)
           if [ "$TODAY" -ge 15 ]; then
-            IMAGE_URL="https://github.com/kasurashan/img-test/blob/main/ai-trend-2.png?raw=true"
+            IMAGE_URL="https://github.com/kasurashan/slack-reminder/blob/main/ai-trend-2.png?raw=true"
           fi
 
           # ▶️ ❸ Slack 메시지 전송
