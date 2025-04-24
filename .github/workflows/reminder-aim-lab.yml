@@ -17,23 +17,25 @@ jobs:
           SLACK_TOKEN: ${{ secrets.SLACK_TOKEN_AIM_LAB }}
           TZ: Asia/Seoul
         run: |
-          IMAGE_URL="https://github.com/kasurashan/slack-reminder/blob/main/Cap%202025-04-25%2001-36-30-538.jpg?raw=true"
+          IMAGE_URL="https://raw.githubusercontent.com/kasurashan/slack-reminder/main/Cap%202025-04-25%2001-36-30-538.jpg"
 
-          jq -n --arg url "$IMAGE_URL" '
+          cat <<EOF > payload.json
           {
-            channel:"#research-progress",
-            text:"You're welcome to upload to the Method Archive anytime—uploads usually happen after a research cycle, but we're always happy to see what you've got!",
-            attachments:[
+            "channel": "#research-progress",
+            "text": "You're welcome to upload to the Method Archive anytime—uploads usually happen after a research cycle, but we're always happy to see what you've got!",
+            "attachments": [
               {
-                fallback:"슬랙 리마인더 이미지",
-                image_url:$url,
-                text:""
+                "fallback": "슬랙 리마인더 이미지",
+                "image_url": "$IMAGE_URL",
+                "text": ""
               }
             ]
-          }' > payload.json
+          }
+          EOF
 
           curl -s -X POST \
             -H "Authorization: Bearer $SLACK_TOKEN" \
             -H "Content-Type: application/json; charset=utf-8" \
             --data @payload.json \
             https://slack.com/api/chat.postMessage | jq .
+
