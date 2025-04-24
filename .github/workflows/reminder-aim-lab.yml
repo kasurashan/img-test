@@ -14,7 +14,7 @@ jobs:
     steps:
       - name: Send reminder to Slack
         env:
-          SLACK_TOKEN: ${{ secrets.SLACK_TOKEN_ANOTHER }}
+          SLACK_TOKEN: ${{ secrets.SLACK_TOKEN_AIM_LAB }}
           TZ: Asia/Seoul
         run: |
           IMAGE_URL="https://github.com/kasurashan/slack-reminder/blob/main/Cap%202025-04-25%2001-36-30-538.jpg?raw=true"
