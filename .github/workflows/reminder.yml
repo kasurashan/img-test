@@ -27,7 +27,7 @@ jobs:
           # ▶️ ❸ Slack 메시지 전송
           jq -n --arg url "$IMAGE_URL" '
           {
-            channel:"#general",
+            channel:"#ai-trend",
             text:"Let’s try to have everyone in this channel post at least once a month!",
             attachments:[
               {
