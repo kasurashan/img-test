@@ -6,7 +6,7 @@ on:
   schedule:
     - cron: '0 4 1-7 * 1'     # 첫째 주 월요일 04:00 UTC
     - cron: '0 4 15-21 * 1'   # 셋째 주 월요일 04:00 UTC
-  workflow_dispatch:          # 수동 실행도 허용
+  # workflow_dispatch:          # 수동 실행도 허용
 
 jobs:
   post-to-slack:
