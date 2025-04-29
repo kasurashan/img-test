@@ -1,30 +1,40 @@
 name: Monthly Slack Reminders
 
-# ❶ 첫째‧셋째 주 월요일 13:00 (KST = UTC+9)
-# GitHub Actions 의 cron 은 “UTC 기준”이니까 13-9 = 04시로 환산
+# 매주 월요일 13:00 KST → UTC 04:00
 on:
   schedule:
-    - cron: '0 4 1-7 * 1'     # 첫째 주 월요일 04:00 UTC
-    - cron: '0 4 15-21 * 1'   # 셋째 주 월요일 04:00 UTC
-  # workflow_dispatch:          # 수동 실행도 허용
+    - cron: '0 4 * * 1'
+  # workflow_dispatch:  # 수동 실행 허용하려면 주석 해제
 
 jobs:
   post-to-slack:
     runs-on: ubuntu-latest
     steps:
+      - name: 첫째·셋째 주 월요일인지 체크  
+        id: week-check
+        run: |
+          # Asia/Seoul 기준 날짜 가져오기
+          DAY=$(TZ=Asia/Seoul date +'%d')
+          if [ "$DAY" -le 7 ] || { [ "$DAY" -ge 15 ] && [ "$DAY" -le 21 ]; }; then
+            echo "should_post=true" >> $GITHUB_OUTPUT
+          else
+            echo "should_post=false" >> $GITHUB_OUTPUT
+          fi
+
       - name: Send reminder to Slack
+        if: steps.week-check.outputs.should_post == 'true'
         env:
           SLACK_TOKEN: ${{ secrets.SLACK_TOKEN }}
-          TZ: Asia/Seoul        # date 명령을 KST 기준으로
+          TZ: Asia/Seoul
         run: |
-          # ▶️ ❷ 날짜가 15일 이상이면 다른 이미지를 보내도록 분기
+          # ❷ 15일 이후면 다른 이미지
           IMAGE_URL="https://github.com/kasurashan/slack-reminder/blob/main/ai-trend-1.png?raw=true"
-          TODAY=$(date +%d)     # KST 기준 일(01~31)
+          TODAY=$(date +'%d')
           if [ "$TODAY" -ge 15 ]; then
             IMAGE_URL="https://github.com/kasurashan/slack-reminder/blob/main/ai-trend-2.png?raw=true"
           fi
 
-          # ▶️ ❸ Slack 메시지 전송
+          # ❸ payload 생성 및 전송
           jq -n --arg url "$IMAGE_URL" '
           {
             channel:"#ai-trend",
