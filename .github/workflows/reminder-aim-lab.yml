@@ -1,41 +1,40 @@
-name: Slack Reminder - Research Progress
-
-# 🔁 2주마다 화요일 오전 4시 UTC (KST 기준 오후 1시)
-# 예: 매달 1주차 화요일과 3주차 화요일 등
 on:
   schedule:
-    - cron: '0 4 1-7 * 2'     # 첫째 주 화요일 13:00 KST
-    - cron: '0 4 15-21 * 2'   # 셋째 주 화요일 13:00 KST
-  # workflow_dispatch:          # 수동 실행도 허용
+    - cron: '0 4 * * 2'     # 매주 화요일 04:00 UTC
 
 jobs:
   post-to-slack:
     runs-on: ubuntu-latest
     steps:
+      - name: 계산: 이번 달 몇 주차인가?
+        id: calc_week
+        run: |
+          # KST 기준으로 계산하고 싶으면 TZ=Asia/Seoul 로 변경
+          DOM=$(date -u +'%d')                            # 오늘 일자(01~31)
+          WEEK=$(( (10#$DOM - 1) / 7 + 1 ))               # 1~5 주차 계산
+          echo "week=$WEEK" >> $GITHUB_OUTPUT
+
+      - name: 1주차·3주차 화요일이 아니면 스킵
+        if: ${{ steps.calc_week.outputs.week != '1' && steps.calc_week.outputs.week != '3' }}
+        run: |
+          echo "이번 주차(${{ steps.calc_week.outputs.week }})는 스킵합니다."
+          exit 0
+
       - name: Send reminder to Slack
         env:
           SLACK_TOKEN: ${{ secrets.SLACK_TOKEN_AIM_LAB }}
-          TZ: Asia/Seoul
+          TZ: Asia/Seoul   # (로그 출력용)
         run: |
-          IMAGE_URL="https://raw.githubusercontent.com/kasurashan/slack-reminder/main/Cap%202025-04-25%2001-36-30-538.jpg"
-
+          IMAGE_URL="https://raw.githubusercontent.com/…/Cap2025-04-25.jpg"
           cat <<EOF > payload.json
           {
             "channel": "#research-progress",
-            "text": "You're welcome to upload to the Method Archive anytime—uploads usually happen after a research cycle, but we're always happy to see what you've got!",
-            "attachments": [
-              {
-                "fallback": "슬랙 리마인더 이미지",
-                "image_url": "$IMAGE_URL",
-                "text": ""
-              }
-            ]
+            "text": "…",
+            "attachments":[{"fallback":"…","image_url":"$IMAGE_URL"}]
           }
           EOF
-
           curl -s -X POST \
             -H "Authorization: Bearer $SLACK_TOKEN" \
-            -H "Content-Type: application/json; charset=utf-8" \
+            -H "Content-Type: application/json" \
             --data @payload.json \
             https://slack.com/api/chat.postMessage | jq .
-
