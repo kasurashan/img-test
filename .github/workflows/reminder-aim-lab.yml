@@ -25,12 +25,12 @@ jobs:
           SLACK_TOKEN: ${{ secrets.SLACK_TOKEN_AIM_LAB }}
           TZ: Asia/Seoul   # (로그 출력용)
         run: |
-          IMAGE_URL="https://raw.githubusercontent.com/…/Cap2025-04-25.jpg"
+          IMAGE_URL="https://raw.githubusercontent.com/kasurashan/slack-reminder/main/Cap%202025-04-25%2001-36-30-538.jpg"
           cat <<EOF > payload.json
           {
             "channel": "#research-progress",
-            "text": "…",
-            "attachments":[{"fallback":"…","image_url":"$IMAGE_URL"}]
+            "text": "You're welcome to upload to the Method Archive anytime—uploads usually happen after a research cycle, but we're always happy to see what you've got!",
+            "attachments":[{"fallback":"슬랙 리마인더 이미지","image_url":"$IMAGE_URL"}]
           }
           EOF
           curl -s -X POST \
